@@ -1,7 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/widgets/CustomTextField.dart';
-import 'package:flutter_application_1/widgets/CustomButton.dart';
+import 'package:flutter_application_1/core/widgets/CustomTextField.dart';
+import 'package:flutter_application_1/core/widgets/CustomButton.dart';
+import 'package:flutter_application_1/data/repositories/LocalUserRepository.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,23 @@ class LoginScreen extends StatefulWidget {
 class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  final _userRepo = LocalUserRepository();
+
+  void _login() async {
+    final email = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    final user = await _userRepo.getUser();
+    if (user == null || user.email != email || user.password != password) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Incorrect credentials')));
+      return;
+    }
+
+    Navigator.pushReplacementNamed(context, '/home');
+  }
 
   @override
   void dispose() {
@@ -67,8 +85,8 @@ class LoginScreenState extends State<LoginScreen> {
                           children: [
                             CustomTextField(
                               controller: _usernameController,
-                              labelText: 'Username',
-                              icon: Icons.person_outline_rounded,
+                              labelText: 'Email',
+                              icon: Icons.email_outlined,
                             ),
                             CustomTextField(
                               controller: _passwordController,
@@ -80,9 +98,7 @@ class LoginScreenState extends State<LoginScreen> {
                             CustomButton(
                               text: 'Log in',
                               isPrimary: true,
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/home');
-                              },
+                              onPressed: _login,
                             ),
                             const SizedBox(height: 12),
                             CustomButton(

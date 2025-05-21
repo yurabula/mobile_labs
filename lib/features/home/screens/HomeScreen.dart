@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/widgets/AcCard.dart';
-import 'package:flutter_application_1/widgets/FrostedGlassCard.dart'; // <-- імпорт
+import 'package:flutter_application_1/features/home/widgets/AcCard.dart';
+import 'package:flutter_application_1/core/widgets/FrostedGlassCard.dart'; // <-- імпорт
 import 'dart:async';
 
 class HomeScreen extends StatefulWidget {

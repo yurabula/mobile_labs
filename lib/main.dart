@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_application_1/screens/HomeScreen.dart';
-import 'package:flutter_application_1/screens/LoginScreen.dart';
-import 'package:flutter_application_1/screens/ProfileScreen.dart';
-import 'package:flutter_application_1/screens/RegisterScreen.dart';
-import 'package:flutter_application_1/screens/SettingsScreen.dart';
+import 'package:flutter_application_1/features/home/screens/HomeScreen.dart';
+import 'package:flutter_application_1/features/auth/screens/LoginScreen.dart';
+import 'package:flutter_application_1/features/userPage/screens/EditProfileScreen.dart';
+import 'package:flutter_application_1/features/userPage/screens/ProfileScreen.dart';
+import 'package:flutter_application_1/features/auth/screens/RegisterScreen.dart';
+import 'package:flutter_application_1/features/settings/screens/SettingsScreen.dart';
 import 'package:flutter_application_1/services/AuthService.dart';
 
 void main() async {
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/home': (context) => const HomeScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/edit_profile': (context) => const EditUserProfilePage(),
       },
     );
   }

@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/widgets/CustomTextField.dart';
-import 'package:flutter_application_1/widgets/CustomButton.dart';
+import 'package:flutter_application_1/core/widgets/CustomTextField.dart';
+import 'package:flutter_application_1/core/widgets/CustomButton.dart';
+import 'package:flutter_application_1/data/repositories/LocalUserRepository.dart';
+import 'package:flutter_application_1/domain/entities/User.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,11 +13,36 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _fullNameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  final _userRepo = LocalUserRepository();
+
+  void _register() async {
+    final name = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    final nameValid = RegExp(r"^[a-zA-Zа-яА-Я\s]+$").hasMatch(name);
+    final emailValid = email.contains('@') && email.contains('.');
+    final passwordValid = password.length >= 6;
+    final passwordsMatch = password == confirmPassword;
+
+    if (!nameValid || !emailValid || !passwordValid || !passwordsMatch) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields correctly')),
+      );
+      return;
+    }
+
+    final user = User(name: name, email: email, password: password);
+    await _userRepo.register(user);
+
+    Navigator.pushReplacementNamed(context, '/home');
+  }
 
   @override
   void dispose() {
@@ -63,7 +90,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: Color(0xFF2C4260),
                   ),
                 ),
-                const SizedBox(height: 8),
                 const SizedBox(height: 32),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(24),
@@ -107,9 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           CustomButton(
                             text: 'Create Account',
                             isPrimary: true,
-                            onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/home');
-                            },
+                            onPressed: _register,
                           ),
                         ],
                       ),
@@ -130,7 +154,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           foregroundColor: const Color(0xFF47BFDF),
                         ),
                         child: const Text(

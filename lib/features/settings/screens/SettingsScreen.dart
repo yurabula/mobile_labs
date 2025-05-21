@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/widgets/CustomButton.dart';
-import 'package:flutter_application_1/widgets/SettingToggleItem.dart';
+import 'package:flutter_application_1/core/widgets/CustomButton.dart';
+import 'package:flutter_application_1/features/settings/widgets/SettingToggleItem.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
