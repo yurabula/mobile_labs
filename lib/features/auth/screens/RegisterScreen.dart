@@ -2,59 +2,60 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/core/widgets/CustomTextField.dart';
 import 'package:flutter_application_1/core/widgets/CustomButton.dart';
-import 'package:flutter_application_1/data/repositories/LocalUserRepository.dart';
-import 'package:flutter_application_1/domain/entities/User.dart';
+import 'package:flutter_application_1/models/UserModel.dart';
+import 'package:flutter_application_1/services/AuthService.dart';
+import 'package:flutter_application_1/utils/ValidationUtils.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({Key? key}) : super(key: key);
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _fullNameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-
-  final _userRepo = LocalUserRepository();
-
-  void _register() async {
-    final name = _fullNameController.text.trim();
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
-
-    final nameValid = RegExp(r"^[a-zA-Zа-яА-Я\s]+$").hasMatch(name);
-    final emailValid = email.contains('@') && email.contains('.');
-    final passwordValid = password.length >= 6;
-    final passwordsMatch = password == confirmPassword;
-
-    if (!nameValid || !emailValid || !passwordValid || !passwordsMatch) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields correctly')),
-      );
-      return;
-    }
-
-    final user = User(name: name, email: email, password: password);
-    await _userRepo.register(user);
-
-    Navigator.pushReplacementNamed(context, '/home');
-  }
+  final _phoneController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
-    _fullNameController.dispose();
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    if (_formKey.currentState?.validate() == true) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+
+      final user = UserModel(
+        id: const Uuid().v4(),
+        name: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+        phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+      );
+
+      final result = await authService.register(user);
+
+      if (result && mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -79,92 +80,126 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C4260),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C4260),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                  const SizedBox(height: 32),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CustomTextField(
-                            controller: _fullNameController,
-                            labelText: 'Full Name',
-                            icon: Icons.person_outline_rounded,
-                          ),
-                          CustomTextField(
-                            controller: _emailController,
-                            labelText: 'Email',
-                            icon: Icons.email_outlined,
-                          ),
-                          CustomTextField(
-                            controller: _passwordController,
-                            labelText: 'Password',
-                            icon: Icons.lock_outline_rounded,
-                            obscureText: true,
-                          ),
-                          CustomTextField(
-                            controller: _confirmPasswordController,
-                            labelText: 'Confirm Password',
-                            icon: Icons.lock_outline_rounded,
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 32),
-                          CustomButton(
-                            text: 'Create Account',
-                            isPrimary: true,
-                            onPressed: _register,
-                          ),
-                        ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            CustomTextField(
+                              controller: _nameController,
+                              labelText: 'Full Name',
+                              icon: Icons.person_outline_rounded,
+                              validator: ValidationUtils.validateName,
+                            ),
+                            CustomTextField(
+                              controller: _emailController,
+                              labelText: 'Email',
+                              icon: Icons.email_outlined,
+                              validator: ValidationUtils.validateEmail,
+                            ),
+                            CustomTextField(
+                              controller: _passwordController,
+                              labelText: 'Password',
+                              icon: Icons.lock_outline_rounded,
+                              obscureText: !_isPasswordVisible,
+                              validator: ValidationUtils.validatePassword,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _isPasswordVisible
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: Colors.white70,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordVisible = !_isPasswordVisible;
+                                  });
+                                },
+                              ),
+                            ),
+                            CustomTextField(
+                              controller: _phoneController,
+                              labelText: 'Phone (Optional)',
+                              icon: Icons.phone_outlined,
+                              validator: ValidationUtils.validatePhone,
+                            ),
+                            const SizedBox(height: 32),
+                            CustomButton(
+                              text: 'Create Account',
+                              isPrimary: true,
+                              isLoading: authService.isLoading,
+                              onPressed:
+                                  authService.isLoading
+                                      ? null
+                                      : _handleRegister,
+                            ),
+                            if (authService.errorMessage != null) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                authService.errorMessage!,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account?',
-                        style: TextStyle(
-                          color: const Color(0xFF2C4260).withOpacity(0.8),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Already have an account?',
+                          style: TextStyle(
+                            color: const Color(0xFF2C4260).withOpacity(0.8),
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFF47BFDF),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: const Color(0xFF47BFDF),
+                          ),
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
                         ),
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

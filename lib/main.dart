@@ -1,50 +1,34 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_application_1/di/DiContainer.dart';
+import 'package:flutter_application_1/services/AuthService.dart';
 import 'package:flutter_application_1/features/home/screens/HomeScreen.dart';
 import 'package:flutter_application_1/features/auth/screens/LoginScreen.dart';
-import 'package:flutter_application_1/features/userPage/screens/EditProfileScreen.dart';
-import 'package:flutter_application_1/features/userPage/screens/ProfileScreen.dart';
-import 'package:flutter_application_1/features/auth/screens/RegisterScreen.dart';
 import 'package:flutter_application_1/features/settings/screens/SettingsScreen.dart';
-import 'package:flutter_application_1/services/AuthService.dart';
+import 'package:flutter_application_1/features/auth/screens/RegisterScreen.dart';
+import 'package:flutter_application_1/features/userPage/screens/ProfileScreen.dart';
+import 'package:flutter_application_1/features/userPage/screens/EditProfileScreen.dart';
+
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final bool isLoggedIn = await AuthService.isUserLoggedIn();
+  final providers = await DIContainer.provideDependencies();
 
-  bool autoLoginSuccessful = false;
-  if (isLoggedIn) {
-    autoLoginSuccessful = await AuthService.loginWithSavedCredentials();
-  }
-
-  runApp(MyApp(isLoggedIn: isLoggedIn && autoLoginSuccessful));
+  runApp(MultiProvider(providers: providers, child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-  final bool isLoggedIn;
-  const MyApp({required this.isLoggedIn, super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFF2665B6),
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2665B6),
-          primary: const Color(0xFF2665B6),
-          secondary: const Color(0xFFC1E1FF),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2665B6),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-      ),
-      initialRoute: isLoggedIn ? '/home' : '/login',
+      title: 'Лабораторна робота 3',
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      initialRoute: '/',
       routes: {
+        '/': (context) => const AuthWrapper(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/profile': (context) => const ProfileScreen(),
@@ -53,5 +37,24 @@ class MyApp extends StatelessWidget {
         '/edit_profile': (context) => const EditUserProfilePage(),
       },
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
+    if (authService.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (authService.isAuthenticated) {
+      return const HomeScreen();
+    } else {
+      return const LoginScreen();
+    }
   }
 }

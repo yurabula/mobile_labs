@@ -1,73 +1,136 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_application_1/data/repositories/UserRepositoryInterface.dart';
+import 'package:flutter_application_1/models/UserModel.dart';
 
-class AuthService {
-  static const String _isLoggedInKey = 'isLoggedIn';
-  static const String _usernameKey = 'username';
-  static const String _passwordKey = 'password';
+class AuthService extends ChangeNotifier {
+  final UserRepositoryInterface _userRepository;
 
-  static Future<bool> isUserLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_isLoggedInKey) ?? false;
+  bool _isLoading = false;
+  bool _isAuthenticated = false;
+  UserModel? _currentUser;
+  String? _errorMessage;
+
+  AuthService(this._userRepository) {
+    _checkAuth();
   }
 
-  static Future<bool> isLoggedIn() async {
-    return isUserLoggedIn();
+  bool get isLoading => _isLoading;
+  bool get isAuthenticated => _isAuthenticated;
+  UserModel? get currentUser => _currentUser;
+  String? get errorMessage => _errorMessage;
+
+  Future<void> _checkAuth() async {
+    _isLoading = true;
+    notifyListeners();
+
+    _isAuthenticated = await _userRepository.isUserLoggedIn();
+    if (_isAuthenticated) {
+      _currentUser = await _userRepository.getUser();
+    }
+
+    _isLoading = false;
+    notifyListeners();
   }
 
-  static Future<void> setLoggedIn(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isLoggedInKey, value);
-  }
+  Future<bool> login(String email, String password) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
 
-  static Future<void> saveCredentials(String username, String password) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_usernameKey, username);
-    await prefs.setString(_passwordKey, password);
-  }
-
-  static Future<String?> getSavedUsername() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_usernameKey);
-  }
-
-  static Future<String?> getSavedPassword() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_passwordKey);
-  }
-
-  static Future<bool> validateCredentials(
-    String username,
-    String password,
-  ) async {
-    final savedUsername = await getSavedUsername();
-    final savedPassword = await getSavedPassword();
-
-    if (savedUsername == null || savedPassword == null) {
+    try {
+      final user = await _userRepository.login(email, password);
+      if (user != null) {
+        _currentUser = user;
+        _isAuthenticated = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _errorMessage = 'Невірний email або пароль';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Помилка авторизації: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
       return false;
     }
-
-    return username == savedUsername && password == savedPassword;
   }
 
-  static Future<bool> loginWithSavedCredentials() async {
-    final username = await getSavedUsername();
-    final password = await getSavedPassword();
+  Future<bool> register(UserModel user) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
 
-    if (username != null && password != null) {
-      await setLoggedIn(true);
+    try {
+      await _userRepository.saveUser(user);
+      _currentUser = user;
+      _isAuthenticated = true;
+      _isLoading = false;
+      notifyListeners();
       return true;
+    } catch (e) {
+      _errorMessage = 'Помилка реєстрації: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
-
-    return false;
   }
 
-  static Future<void> logout({bool clearCredentials = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isLoggedInKey, false);
+  Future<void> logout() async {
+    _isLoading = true;
+    notifyListeners();
 
-    if (clearCredentials) {
-      await prefs.remove(_usernameKey);
-      await prefs.remove(_passwordKey);
+    await _userRepository.logout();
+    _isAuthenticated = false;
+    _currentUser = null;
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<bool> updateUser(UserModel user) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _userRepository.updateUser(user);
+      if (result) {
+        _currentUser = user;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _errorMessage = 'Помилка оновлення даних: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteAccount() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await _userRepository.deleteUser();
+      if (result) {
+        _currentUser = null;
+        _isAuthenticated = false;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _errorMessage = 'Помилка видалення акаунту: ${e.toString()}';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 }
