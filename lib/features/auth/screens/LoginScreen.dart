@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Smart connect',
+                      'Smart home',
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,

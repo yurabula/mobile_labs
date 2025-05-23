@@ -227,11 +227,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
         const SizedBox(height: 16),
-        const ProfileInfoItem(
-          icon: Icons.account_circle,
-          title: 'Account',
-          subtitle: 'Personal details',
-        ),
         const Divider(height: 1),
         const ProfileInfoItem(
           icon: Icons.devices,
@@ -240,15 +235,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const Divider(height: 1),
         const SizedBox(height: 30),
-        CustomButton(
-          text: 'Edit Profile',
-          onPressed: () {
-            setState(() {
-              _isEditing = true;
-            });
-          },
-          isPrimary: true,
-        ),
         const SizedBox(height: 12),
         CustomButton(text: 'Log Out', onPressed: _logout, isPrimary: false),
         const SizedBox(height: 12),
