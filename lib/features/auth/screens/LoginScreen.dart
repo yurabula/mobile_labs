@@ -4,6 +4,7 @@ import 'package:flutter_application_1/services/AuthService.dart';
 import 'package:flutter_application_1/utils/ValidationUtils.dart';
 import 'package:flutter_application_1/core/widgets/CustomTextField.dart';
 import 'package:flutter_application_1/core/widgets/CustomButton.dart';
+import 'package:flutter_application_1/features/home/screens/HomeScreen.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
