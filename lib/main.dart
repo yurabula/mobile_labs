@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/di/DiContainer.dart';
 import 'package:flutter_application_1/services/AuthService.dart';
 import 'package:flutter_application_1/features/home/screens/HomeScreen.dart';
+
+import 'package:flutter_application_1/features/qr/screens/QRScannerScreen.dart';
+import 'package:flutter_application_1/features/qr/screens/MessageViewScreen.dart';
+
 import 'package:flutter_application_1/features/auth/screens/LoginScreen.dart';
 import 'package:flutter_application_1/features/settings/screens/SettingsScreen.dart';
 import 'package:flutter_application_1/features/auth/screens/RegisterScreen.dart';
@@ -35,6 +39,8 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/edit_profile': (context) => const EditUserProfilePage(),
+        '/qr_screen': (context) => const QRScannerScreen(),
+        '/message_view': (context) => const MessageScreen(),
       },
     );
   }
